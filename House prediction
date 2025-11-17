@@ -1,0 +1,53 @@
+import pandas as pd
+from keras.models import Sequential
+from keras.layers import Dense
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import LabelEncoder
+import matplotlib.pyplot as plt
+
+df=pd.read_csv("D:\Data science\Datasets\Housing.csv")
+
+le1=LabelEncoder()
+le2=LabelEncoder()
+
+df['Mainroad']=le1.fit_transform(df['mainroad'])
+df['Furnishingstatus']=le2.fit_transform(df['furnishingstatus'])
+
+
+x=df[['area','bedrooms','Mainroad','parking','Furnishingstatus']]
+y=df['price'].values.reshape(-1,1)
+
+
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=.2,random_state=42)
+
+scaler_x=StandardScaler()
+x_train=scaler_x.fit_transform(x_train)
+s_etst=scaler_x.transform(x_test)
+
+scaler_y=StandardScaler()
+y_train=scaler_y.fit_transform(y_train)
+
+model=Sequential()
+model.add(Dense(12,input_dim=x_train.shape[1],activation='relu'))
+model.add(Dense(7,activation='relu'))
+model.add(Dense(1,activation='linear'))
+
+model.compile(loss='mean_squared_error',optimizer='adam')
+model.fit(x_train,y_train,epochs=100,verbose=1)
+
+pred=model.predict(x_test)
+
+pred_rescaled=scaler_y.inverse_transform(pred)
+
+print("predicted price :",pred_rescaled)
+y_test=y_test.reshape(-1,1)
+mse=mean_squared_error(y_test,pred_rescaled)
+print(f"MSE:{mse:.2f}")
+
+plt.scatter(y_test,pred_rescaled)
+plt.title('Price')
+plt.xlabel('Actual price')
+plt.ylabel('price')
+plt.show()
